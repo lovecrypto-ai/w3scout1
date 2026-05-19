@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W3SCOUT — Web3 Game Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=Literata:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1118;
+    --bg3: #131820;
+    --panel: #111620;
+    --border: #1e2a3a;
+    --border2: #243040;
+    --accent: #00e5ff;
+    --accent2: #7b5cff;
+    --accent3: #ff4b6e;
+    --gold: #ffc94d;
+    --green: #00e99a;
+    --red: #ff4b6e;
+    --yellow: #ffc94d;
+    --text: #e2eaf5;
+    --text2: #7a9ab8;
+    --text3: #3d5570;
+    --glow: 0 0 20px rgba(0,229,255,0.15);
+    --glow2: 0 0 30px rgba(123,92,255,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  /* GRID BG */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* TOP GLOW */
+  .top-glow {
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LAYOUT */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    background: rgba(8,11,16,0.92);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--accent);
+    box-shadow: var(--glow);
+    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-tag {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* HERO */
+  .hero {
+    padding: 60px 0 40px;
+    text-align: center;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #e2eaf5 0%, #7ab8d4 50%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-family: 'Literata', serif;
+    font-size: 16px;
+    color: var(--text2);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+  }
+
+  /* INPUT AREA */
+  .input-section {
+    max-width: 760px;
+    margin: 0 auto 60px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border2);
+    background: var(--panel);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .input-icon {
+    padding: 16px;
+    color: var(--text3);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  #urlInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 16px 0;
+    min-width: 0;
+  }
+
+  #urlInput::placeholder { color: var(--text3); }
+
+  .analyze-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 28px;
+    transition: all 0.2s;
+    clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
+    flex-shrink: 0;
+  }
+
+  .analyze-btn:hover {
+    background: #33ecff;
+    box-shadow: 0 0 30px rgba(0,229,255,0.4);
+  }
+
+  .analyze-btn:disabled {
+    background: var(--border2);
+    color: var(--text3);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .input-hints {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .hint-tag {
+    font-size: 10px;
+    color: var(--text3);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .hint-tag:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* LOADING */
+  #loadingArea {
+    display: none;
+    max-width: 760px;
+    margin: 0 auto 40px;
+  }
+
+  .loading-box {
+    border: 1px solid var(--border2);
+    background: var(--panel);
+    padding: 32px;
+  }
+
+  .loading-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-steps { list-style: none; }
+  .loading-steps li {
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s;
+  }
+
+  .loading-steps li.active { color: var(--accent); }
+  .loading-steps li.done { color: var(--green); }
+
+  .step-icon { font-size: 11px; }
+
+  /* RESULTS */
+  #resultsArea {
+    display: none;
+    padding-bottom: 80px;
+  }
+
+  /* SCORE HEADER */
+  .result-header {
+    border: 1px solid var(--border2);
+    background: var(--panel);
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  }
+
+  .result-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .project-info h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .project-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .meta-tag {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .meta-tag.blockchain { border-color: #7b5cff44; color: var(--accent2); background: #7b5cff0d; }
+  .meta-tag.genre { border-color: #00e5ff33; color: var(--accent); background: #00e5ff0d; }
+  .meta-tag.status-beta { border-color: #ffc94d44; color: var(--gold); background: #ffc94d0d; }
+  .meta-tag.status-live { border-color: #00e99a44; color: var(--green); background: #00e99a0d; }
+  .meta-tag.status-dead { border-color: #ff4b6e44; color: var(--red); background: #ff4b6e0d; }
+  .meta-tag.f2p { border-color: #00e99a44; color: var(--green); }
+  .meta-tag.p2e { border-color: #ffc94d44; color: var(--gold); }
+
+  /* OVERALL SCORE */
+  .overall-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .score-ring {
+    width: 100px;
+    height: 100px;
+    position: relative;
+  }
+
+  .score-ring svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  .score-ring-track { fill: none; stroke: var(--border2); stroke-width: 4; }
+  .score-ring-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+  }
+
+  .score-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* VERDICT BANNER */
+  .verdict-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border: 1px solid;
+    margin-bottom: 28px;
+  }
+
+  .verdict-banner.verdict-strong {
+    border-color: rgba(0,233,154,0.4);
+    background: rgba(0,233,154,0.05);
+    color: var(--green);
+  }
+  .verdict-banner.verdict-caution {
+    border-color: rgba(255,201,77,0.4);
+    background: rgba(255,201,77,0.05);
+    color: var(--gold);
+  }
+  .verdict-banner.verdict-risky {
+    border-color: rgba(255,75,110,0.4);
+    background: rgba(255,75,110,0.05);
+    color: var(--red);
+  }
+
+  .verdict-icon { font-size: 22px; }
+  .verdict-text { flex: 1; }
+  .verdict-text strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .verdict-text p { font-size: 12px; opacity: 0.8; }
+
+  /* SCORE GRID */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 2px;
+    margin-bottom: 24px;
+  }
+
+  .score-card {
+    background: var(--bg2);
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .score-card-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .score-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    transition: width 1.2s ease;
+    position: relative;
+  }
+
+  .score-bar-fill.high { background: var(--green); }
+  .score-bar-fill.mid { background: var(--gold); }
+  .score-bar-fill.low { background: var(--red); }
+
+  .score-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  /* MAIN GRID */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* PANELS */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+
+  .panel-full {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 2px;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title-icon { color: var(--accent); }
+
+  /* FLAGS */
+  .flags-list { list-style: none; }
+  .flags-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .flags-list li:last-child { border-bottom: none; }
+
+  .flag-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .green-flag .flag-icon { color: var(--green); }
+  .red-flag .flag-icon { color: var(--red); }
+
+  .green-flag .flag-text { color: var(--text); }
+  .red-flag .flag-text { color: var(--text); }
+
+  .flag-text strong {
+    display: block;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .flag-text span { color: var(--text2); font-size: 11px; }
+
+  /* COMPARISONS */
+  .comparison-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .comparison-item:last-child { border-bottom: none; }
+
+  .comp-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .comp-meta { font-size: 11px; color: var(--text2); }
+
+  .comp-score {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: right;
+  }
+
+  .comp-verdict {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-align: right;
+  }
+
+  .comp-verdict.lived { color: var(--green); }
+  .comp-verdict.dead { color: var(--red); }
+  .comp-verdict.mixed { color: var(--gold); }
+
+  .comp-lifespan {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* DEEP DIVE */
+  .analysis-section { margin-bottom: 24px; }
+
+  .analysis-section h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .analysis-section p {
+    font-family: 'Literata', serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text2);
+  }
+
+  /* DAILY TASK RECOMMENDATION */
+  .daily-rec {
+    border: 1px solid var(--border2);
+    background: linear-gradient(135deg, rgba(123,92,255,0.07), rgba(0,229,255,0.04));
+    padding: 28px;
+    margin-bottom: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .daily-rec::before {
+    content: 'DAILY TASK EVALUATION';
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+  }
+
+  .daily-rec h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .daily-tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .daily-task-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+
+  .task-name {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .task-rec {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .task-rec.yes { color: var(--green); }
+  .task-rec.maybe { color: var(--gold); }
+  .task-rec.no { color: var(--red); }
+
+  .task-note { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* TIMELINE */
+  .timeline-item {
+    display: flex;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .timeline-item:last-child { border-bottom: none; }
+  .timeline-date {
+    font-size: 10px;
+    color: var(--accent);
+    width: 80px;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .timeline-content { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* RISK METER */
+  .risk-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 0;
+  }
+
+  .risk-label-area { flex: 1; }
+  .risk-label-main {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .risk-label-main.low { color: var(--green); }
+  .risk-label-main.medium { color: var(--gold); }
+  .risk-label-main.high { color: var(--red); }
+
+  .risk-sublabel { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .risk-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 240px;
+  }
+
+  .risk-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .risk-bar-label { width: 120px; flex-shrink: 0; }
+  .risk-bar-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .risk-bar-inner {
+    height: 100%;
+    transition: width 1.2s ease;
+  }
+
+  .rb-low { background: var(--green); }
+  .rb-med { background: var(--gold); }
+  .rb-high { background: var(--red); }
+
+  /* FOOTER NOTE */
+  .footer-note {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text3);
+  }
+
+  .empty-state .big-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-family: 'Literata', serif;
+    font-size: 14px;
+    color: var(--text3);
+  }
+
+  /* HISTORY */
+  .history-panel {
+    margin-bottom: 40px;
+  }
+
+  .history-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .history-item {
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .history-item:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .history-score {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  /* COPY BTN */
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    transition: all 0.2s;
+    margin-left: auto;
+    display: block;
+    margin-top: 12px;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ANIMATE IN */
+  .animate-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.5s forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="top-glow"></div>
+
+<header>
+  <div class="wrapper">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">W3</div>
+        <div>
+          <div class="logo-text">W3<span>SCOUT</span></div>
+          <div class="header-tag">WEB3 GAME INTELLIGENCE</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-dot">
+          <div class="dot"></div>
+          <span>AI ANALYSIS ONLINE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrapper">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">// DEEP INTELLIGENCE FOR WEB3 GAMING</div>
+      <h1 class="hero-title">Scout Before<br>You Grind</h1>
+      <p class="hero-sub">Paste any Web3 game link, tweet, or website. Get a full risk analysis, scorecard, market comparison, and daily-task recommendation — before you invest your time.</p>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-section">
+      <div class="input-label">// PASTE PROJECT URL, TWEET, OR WEBSITE</div>
+      <div class="input-wrap">
+        <div class="input-icon">⬡</div>
+        <input type="text" id="urlInput" placeholder="https://... or paste a tweet URL or project name" />
+        <button class="analyze-btn" onclick="runAnalysis()" id="analyzeBtn">ANALYZE →</button>
+      </div>
+      <div class="input-hints">
+        <span class="hint-tag" onclick="demo('https://axieinfinity.com')">↗ Try Axie Infinity</span>
+        <span class="hint-tag" onclick="demo('https://stepn.com')">↗ Try StepN</span>
+        <span class="hint-tag" onclick="demo('https://twitter.com/PlayBigTime')">↗ Try BigTime</span>
+        <span class="hint-tag" onclick="demo('https://gods.gg')">↗ Try Gods Unchained</span>
+        <span class="hint-tag" onclick="demo('https://playtoearn.io/new-game-beta')">↗ Try Unknown Beta</span>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingArea">
+      <div class="loading-box">
+        <div class="loading-title">
+          <div class="spinner"></div>
+          <span>RUNNING DEEP ANALYSIS</span>
+        </div>
+        <ul class="loading-steps" id="loadingSteps">
+          <li id="step1"><span class="step-icon">○</span> Fetching project data & metadata</li>
+          <li id="step2"><span class="step-icon">○</span> Analyzing tokenomics & economic model</li>
+          <li id="step3"><span class="step-icon">○</span> Scanning team & backer credibility</li>
+          <li id="step4"><span class="step-icon">○</span> Running market comparison</li>
+          <li id="step5"><span class="step-icon">○</span> Evaluating risk profile & flags</li>
+          <li id="step6"><span class="step-icon">○</span> Generating daily-task recommendation</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="resultsArea">
+      <div id="resultsContent"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="historySection" style="display:none" class="history-panel">
+      <div class="panel-title" style="margin-bottom:12px">
+        <span class="panel-title-icon">⟳</span> RECENT ANALYSES
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="empty-state">
+      <div class="big-icon">⬡</div>
+      <p>Paste a Web3 game URL or tweet above to begin your analysis.<br>No game passes unscrutinized.</p>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ============================================================
+//  W3SCOUT — CORE ENGINE
+// ============================================================
+
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+let analysisHistory = JSON.parse(localStorage.getItem('w3scout_history') || '[]');
+
+function demo(url) {
+  document.getElementById('urlInput').value = url;
+  runAnalysis();
+}
+
+function renderHistory() {
+  if (analysisHistory.length === 0) return;
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  section.style.display = 'block';
+  list.innerHTML = analysisHistory.slice(-8).reverse().map(h => `
+    <div class="history-item" onclick="reloadResult('${h.id}')">
+      <span>${h.name}</span>
+      <span class="history-score" style="color:${scoreColor(h.score)}">${h.score}</span>
+    </div>
+  `).join('');
+}
+
+function scoreColor(s) {
+  if (s >= 70) return 'var(--green)';
+  if (s >= 45) return 'var(--gold)';
+  return 'var(--red)';
+}
+
+const resultCache = {};
+
+function reloadResult(id) {
+  const cached = resultCache[id];
+  if (!cached) return;
+  document.getElementById('resultsArea').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsContent').innerHTML = cached;
+  animateScores();
+}
+
+async function runAnalysis() {
+  const input = document.getElementById('urlInput').value.trim();
+  if (!input) return;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('loadingArea').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = true;
+
+  // Animate loading steps
+  const steps = ['step1','step2','step3','step4','step5','step6'];
+  let currentStep = 0;
+
+  const stepInterval = setInterval(() => {
+    if (currentStep > 0) {
+      document.getElementById(steps[currentStep-1]).className = 'done';
+      document.getElementById(steps[currentStep-1]).querySelector('.step-icon').textContent = '✓';
+    }
+    if (currentStep < steps.length) {
+      document.getElementById(steps[currentStep]).className = 'active';
+      document.getElementById(steps[currentStep]).querySelector('.step-icon').textContent = '▶';
+    }
+    currentStep++;
+  }, 900);
+
+  const prompt = buildPrompt(input);
+
+  let rawText = '';
+  try {
+    const res = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: `You are W3Scout, an expert Web3 gaming analyst with deep knowledge of blockchain games, tokenomics, GameFi economics, NFT markets, and the history of Web3 gaming projects from 2018 to present. You have encyclopedic knowledge of projects like Axie Infinity, StepN, Splinterlands, Gods Unchained, Illuvium, The Sandbox, Decentraland, BigTime, Parallel, Pixels, MapleStory Universe, Shrapnel, and hundreds of others. You provide brutally honest, data-driven analysis.
+
+Always respond ONLY with a valid JSON object. No markdown, no explanation outside the JSON. The JSON schema is exactly as defined in the user prompt.`,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    rawText = data.content?.map(c => c.text || '').join('') || '';
+  } catch(e) {
+    rawText = '';
+  }
+
+  clearInterval(stepInterval);
+  steps.forEach((s, i) => {
+    document.getElementById(s).className = 'done';
+    document.getElementById(s).querySelector('.step-icon').textContent = '✓';
+  });
+
+  setTimeout(() => {
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+
+    let analysis;
+    try {
+      const cleaned = rawText.replace(/```json|```/g, '').trim();
+      analysis = JSON.parse(cleaned);
+    } catch(e) {
+      analysis = generateFallback(input);
+    }
+
+    const html = buildResultHTML(analysis);
+    const id = Date.now().toString();
+    resultCache[id] = html;
+
+    // Save to history
+    analysisHistory.push({ id, name: analysis.projectName || input.substring(0,30), score: analysis.overallScore || 50 });
+    if (analysisHistory.length > 20) analysisHistory.shift();
+    try { localStorage.setItem('w3scout_history', JSON.stringify(analysisHistory)); } catch(e) {}
+
+    document.getElementById('resultsArea').style.display = 'block';
+    document.getElementById('resultsContent').innerHTML = html;
+    renderHistory();
+    animateScores();
+    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 500);
+}
+
+function buildPrompt(input) {
+  return `Analyze this Web3 game project: "${input}"
+
+If this matches a real Web3 game you know, use your accurate knowledge. If it's unknown/fictional, extrapolate realistic analysis based on patterns.
+
+Return ONLY a JSON object with this exact structure:
+
+{
+  "projectName": "string",
+  "tagline": "string (one line description)",
+  "blockchain": "string (e.g. Ethereum, Ronin, BNB, Immutable X, Polygon, Solana, etc.)",
+  "genre": "string (RPG / Strategy / Battle Royale / Sports / Racing / Card Game / Idle / etc.)",
+  "status": "string (Beta / Live / Launched / Sunset / Rumored)",
+  "model": "string (F2P / P2E / P2P / Hybrid)",
+  "launchYear": "string or null",
+  "overallScore": number (0-100),
+  "riskLevel": "Low / Medium / High / Very High",
+  "verdict": "string (INVEST TIME / PROCEED WITH CAUTION / SKIP FOR NOW / AVOID)",
+  "verdictSummary": "string (2-3 sentences summarizing the verdict for a player evaluating daily time investment)",
+  "scores": {
+    "teamCredibility": number,
+    "tokenomics": number,
+    "gameplay": number,
+    "communityTraction": number,
+    "longTermViability": number,
+    "betaWorthiness": number,
+    "revenueModel": number
+  },
+  "greenFlags": [
+    { "title": "string", "detail": "string" },
+    { "title": "string", "detail": "string" },
+    { "title": "string", "detail": "string" }
+  ],
+  "redFlags": [
+    { "title": "string", "detail": "string" },
+    { "title": "string", "detail": "string" },
+    { "title": "string", "detail": "string" }
+  ],
+  "riskBreakdown": {
+    "rugPullRisk": number,
+    "tokenCollapseRisk": number,
+    "abandonmentRisk": number,
+    "competitionRisk": number,
+    "regulatoryRisk": number
+  },
+  "comparisons": [
+    {
+      "name": "string",
+      "similarity": "string",
+      "outcome": "Thriving / Declining / Dead / Pivoted",
+      "lifespan": "string (e.g. 8 months, 2 years, ongoing)",
+      "profitable": "Yes / No / Mixed",
+      "score": number,
+      "f2p": boolean,
+      "lesson": "string"
+    },
+    {
+      "name": "string",
+      "similarity": "string",
+      "outcome": "Thriving / Declining / Dead / Pivoted",
+      "lifespan": "string",
+      "profitable": "Yes / No / Mixed",
+      "score": number,
+      "f2p": boolean,
+      "lesson": "string"
+    },
+    {
+      "name": "string",
+      "similarity": "string",
+      "outcome": "Thriving / Declining / Dead / Pivoted",
+      "lifespan": "string",
+      "profitable": "Yes / No / Mixed",
+      "score": number,
+      "f2p": boolean,
+      "lesson": "string"
+    }
+  ],
+  "deepDive": {
+    "overview": "string (2-3 sentences about the project)",
+    "tokenomics": "string (2-3 sentences about economic model, token utility, inflation risks)",
+    "team": "string (2-3 sentences about team background, track record, anonymity)",
+    "gameplay": "string (2-3 sentences about actual gameplay quality and loop)",
+    "community": "string (2-3 sentences about community size, engagement, sentiment)",
+    "betaAssessment": "string (2-3 sentences about whether beta participation is worth it)"
+  },
+  "dailyTaskRecommendation": {
+    "include": "Yes / No / Maybe",
+    "timeInvestment": "string (e.g. 15-30 min/day, 1-2 hours/day, Skip)",
+    "taskType": "string (e.g. Daily quests, Staking only, Community tasks, Skip)",
+    "earningPotential": "string (e.g. Low, Medium, High, Speculative)",
+    "breakEven": "string (e.g. ~2 weeks, ~3 months, Unknown, N/A)",
+    "recommendation": "string (1-2 sentences of actionable advice for daily grinder)"
+  },
+  "keyTimeline": [
+    { "date": "string", "event": "string" },
+    { "date": "string", "event": "string" },
+    { "date": "string", "event": "string" }
+  ]
+}`;
+}
+
+function generateFallback(input) {
+  return {
+    projectName: input.replace(/https?:\/\/|www\./g,'').split('/')[0] || 'Unknown Project',
+    tagline: 'Web3 blockchain gaming project',
+    blockchain: 'Unknown',
+    genre: 'Unknown',
+    status: 'Unknown',
+    model: 'Unknown',
+    launchYear: null,
+    overallScore: 38,
+    riskLevel: 'High',
+    verdict: 'PROCEED WITH CAUTION',
+    verdictSummary: 'Unable to retrieve full data for this project. Exercise extreme caution — unknown projects carry significantly elevated risk.',
+    scores: { teamCredibility: 30, tokenomics: 35, gameplay: 40, communityTraction: 25, longTermViability: 30, betaWorthiness: 45, revenueModel: 35 },
+    greenFlags: [
+      { title: 'Early Entry Window', detail: 'Early beta participation can yield higher rewards if project succeeds.' },
+      { title: 'Free Beta Access', detail: 'If beta is free-to-play, time risk is lower than capital risk.' }
+    ],
+    redFlags: [
+      { title: 'Unknown Team', detail: 'No verifiable team information available — major red flag for any Web3 project.' },
+      { title: 'No Track Record', detail: 'Unable to verify any prior successful projects from this team.' },
+      { title: 'Unverified Tokenomics', detail: 'Token model and economic sustainability cannot be assessed.' }
+    ],
+    riskBreakdown: { rugPullRisk: 65, tokenCollapseRisk: 70, abandonmentRisk: 60, competitionRisk: 55, regulatoryRisk: 40 },
+    comparisons: [
+      { name: 'Axie Infinity', similarity: 'P2E pioneer, similar hype cycle', outcome: 'Declining', lifespan: '5+ years', profitable: 'Mixed', score: 62, f2p: false, lesson: 'Even top P2E games face brutal token collapse when growth stalls.' },
+      { name: 'StepN', similarity: 'High early returns, then crash', outcome: 'Declining', lifespan: '18 months peak', profitable: 'Mixed', score: 45, f2p: false, lesson: 'Move-to-earn mechanics are unsustainable without constant new users.' },
+      { name: 'Splinterlands', similarity: 'Card game with play economy', outcome: 'Thriving', lifespan: '5+ years ongoing', profitable: 'Yes', score: 71, f2p: true, lesson: 'Strong gameplay loop + F2P entry = better retention and longevity.' }
+    ],
+    deepDive: {
+      overview: 'Insufficient data to fully assess this project. The URL or project name provided did not match known Web3 gaming databases.',
+      tokenomics: 'Token model unknown. Be wary of any project requiring upfront NFT purchase without demonstrated gameplay value.',
+      team: 'Team background could not be verified. Anonymous teams are a significant risk factor in Web3 gaming.',
+      gameplay: 'No gameplay data available. Beta testing is recommended only if entry is free.',
+      community: 'Community size and sentiment unknown. Check Discord and Twitter manually before investing time.',
+      betaAssessment: 'If beta is free-to-play, limited participation for data-gathering may be acceptable. Do not invest capital.'
+    },
+    dailyTaskRecommendation: {
+      include: 'Maybe',
+      timeInvestment: '15 min/day max',
+      taskType: 'Observation only',
+      earningPotential: 'Speculative',
+      breakEven: 'Unknown',
+      recommendation: 'Observe only if beta is free. Do not invest capital. Revisit when more data is available.'
+    },
+    keyTimeline: [
+      { date: 'Unknown', event: 'Project announced' },
+      { date: 'Current', event: 'Beta / early access phase' },
+      { date: 'TBA', event: 'Full launch (unconfirmed)' }
+    ]
+  };
+}
+
+function buildResultHTML(a) {
+  const sc = a.scores || {};
+  const rb = a.riskBreakdown || {};
+  const verdictClass = a.verdict?.includes('INVEST') ? 'verdict-strong' : a.verdict?.includes('CAUTION') ? 'verdict-caution' : 'verdict-risky';
+  const verdictIcon = a.verdict?.includes('INVEST') ? '✦' : a.verdict?.includes('CAUTION') ? '◈' : '⚠';
+  const oc = scoreColor(a.overallScore || 50);
+  const dailyInclude = a.dailyTaskRecommendation?.include || 'Maybe';
+  const dailyClass = dailyInclude === 'Yes' ? 'yes' : dailyInclude === 'No' ? 'no' : 'maybe';
+
+  const circumference = 2 * Math.PI * 40;
+  const offset = circumference - ((a.overallScore || 50) / 100 * circumference);
+  const ringColor = a.overallScore >= 70 ? '#00e99a' : a.overallScore >= 45 ? '#ffc94d' : '#ff4b6e';
+
+  function scoreBar(val) {
+    const cls = val >= 70 ? 'high' : val >= 45 ? 'mid' : 'low';
+    const color = val >= 70 ? 'var(--green)' : val >= 45 ? 'var(--gold)' : 'var(--red)';
+    return `<div class="score-bar-wrap"><div class="score-bar-fill ${cls}" style="width:0%" data-target="${val}%"></div></div>
+            <div class="score-val" style="color:${color}">${val}</div>`;
+  }
+
+  function riskBar(val, level) {
+    const cls = level === 'low' ? 'rb-low' : level === 'med' ? 'rb-med' : 'rb-high';
+    return `<div class="risk-bar-track"><div class="risk-bar-inner ${cls}" style="width:0%" data-target="${val}%"></div></div>`;
+  }
+
+  const compOutcomeClass = o => o === 'Thriving' ? 'lived' : o === 'Dead' ? 'dead' : 'mixed';
+
+  return `
+  <div class="result-header animate-in">
+    <div class="result-header-top">
+      <div class="project-info">
+        <h2>${a.projectName || 'Unknown Project'}</h2>
+        <p style="color:var(--text2);font-family:'Literata',serif;font-size:14px;margin-top:4px">${a.tagline || ''}</p>
+        <div class="project-meta">
+          ${a.blockchain ? `<span class="meta-tag blockchain">${a.blockchain}</span>` : ''}
+          ${a.genre ? `<span class="meta-tag genre">${a.genre}</span>` : ''}
+          ${a.status ? `<span class="meta-tag status-${(a.status||'').toLowerCase()}">${a.status}</span>` : ''}
+          ${a.model ? `<span class="meta-tag ${(a.model||'').toLowerCase().includes('f2p') || (a.model||'').toLowerCase() === 'free' ? 'f2p' : 'p2e'}">${a.model}</span>` : ''}
+          ${a.launchYear ? `<span class="meta-tag">EST. ${a.launchYear}</span>` : ''}
+        </div>
+      </div>
+      <div class="overall-score">
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="score-ring-track" cx="50" cy="50" r="40" />
+            <circle class="score-ring-fill" cx="50" cy="50" r="40"
+              stroke="${ringColor}"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${circumference}"
+              data-target="${offset}"
+              id="scoreRing" />
+          </svg>
+          <div class="score-number" style="color:${ringColor}">${a.overallScore || '?'}</div>
+        </div>
+        <div class="score-label">OVERALL SCORE</div>
+      </div>
+    </div>
+
+    <div class="verdict-banner ${verdictClass}">
+      <div class="verdict-icon">${verdictIcon}</div>
+      <div class="verdict-text">
+        <strong>${a.verdict || 'ANALYSIS COMPLETE'}</strong>
+        <p>${a.verdictSummary || ''}</p>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-align:right">
+        RISK<br><span style="font-size:20px">${a.riskLevel || '?'}</span>
+      </div>
+    </div>
+
+    <div class="score-grid">
+      ${Object.entries({
+        'TEAM': sc.teamCredibility,
+        'TOKENOMICS': sc.tokenomics,
+        'GAMEPLAY': sc.gameplay,
+        'COMMUNITY': sc.communityTraction,
+        'LONGEVITY': sc.longTermViability,
+        'BETA VALUE': sc.betaWorthiness,
+        'REVENUE': sc.revenueModel,
+      }).filter(([k,v]) => v !== undefined).map(([k,v]) => `
+        <div class="score-card">
+          <div class="score-card-label">${k}</div>
+          ${scoreBar(v)}
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- DAILY TASK REC -->
+  <div class="daily-rec animate-in delay-1">
+    <h3>⬡ SHOULD YOU ADD THIS TO YOUR DAILY TASKS?</h3>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="font-size:48px;font-family:'Syne',sans-serif;font-weight:800;color:${dailyClass==='yes'?'var(--green)':dailyClass==='no'?'var(--red)':'var(--gold)'}">${dailyInclude.toUpperCase()}</div>
+      <div style="flex:1">
+        <p style="font-family:'Literata',serif;font-size:14px;line-height:1.7;color:var(--text2)">${a.dailyTaskRecommendation?.recommendation || ''}</p>
+      </div>
+    </div>
+    <div class="daily-tasks-grid">
+      <div class="daily-task-item">
+        <div class="task-name">TIME INVESTMENT</div>
+        <div class="task-rec ${dailyClass}">${a.dailyTaskRecommendation?.timeInvestment || '?'}</div>
+      </div>
+      <div class="daily-task-item">
+        <div class="task-name">RECOMMENDED TASKS</div>
+        <div class="task-rec ${dailyClass}">${a.dailyTaskRecommendation?.taskType || '?'}</div>
+      </div>
+      <div class="daily-task-item">
+        <div class="task-name">EARNING POTENTIAL</div>
+        <div class="task-rec ${dailyClass}">${a.dailyTaskRecommendation?.earningPotential || '?'}</div>
+      </div>
+      <div class="daily-task-item">
+        <div class="task-name">BREAK-EVEN EST.</div>
+        <div class="task-rec ${dailyClass}">${a.dailyTaskRecommendation?.breakEven || '?'}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLAGS + RISK -->
+  <div class="main-grid animate-in delay-2">
+    <div class="panel">
+      <div class="panel-title"><span class="panel-title-icon">✦</span> GREEN FLAGS</div>
+      <ul class="flags-list">
+        ${(a.greenFlags || []).map(f => `
+          <li class="green-flag">
+            <span class="flag-icon">◈</span>
+            <div class="flag-text">
+              <strong>${f.title}</strong>
+              <span>${f.detail}</span>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><span class="panel-title-icon" style="color:var(--red)">⚠</span> RED FLAGS</div>
+      <ul class="flags-list">
+        ${(a.redFlags || []).map(f => `
+          <li class="red-flag">
+            <span class="flag-icon">▲</span>
+            <div class="flag-text">
+              <strong>${f.title}</strong>
+              <span>${f.detail}</span>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  </div>
+
+  <!-- RISK BREAKDOWN -->
+  <div class="panel-full animate-in delay-2">
+    <div class="panel-title"><span class="panel-title-icon">◉</span> RISK BREAKDOWN</div>
+    <div class="risk-display">
+      <div class="risk-label-area">
+        <div class="risk-label-main ${(a.riskLevel||'').toLowerCase().includes('low') ? 'low' : (a.riskLevel||'').toLowerCase().includes('high') ? 'high' : 'medium'}">${a.riskLevel || 'UNKNOWN'}</div>
+        <div class="risk-sublabel">OVERALL RISK CLASSIFICATION</div>
+      </div>
+      <div class="risk-bars">
+        ${[
+          ['Rug Pull Risk', rb.rugPullRisk, 'high'],
+          ['Token Collapse', rb.tokenCollapseRisk, 'high'],
+          ['Abandonment', rb.abandonmentRisk, 'med'],
+          ['Competition', rb.competitionRisk, 'med'],
+          ['Regulatory', rb.regulatoryRisk, 'low'],
+        ].map(([label, val, level]) => `
+          <div class="risk-bar-row">
+            <span class="risk-bar-label">${label}</span>
+            ${riskBar(val, val > 60 ? 'high' : val > 35 ? 'med' : 'low')}
+            <span style="font-size:11px;width:30px;text-align:right;color:${val>60?'var(--red)':val>35?'var(--gold)':'var(--green)'}">${val}%</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISONS -->
+  <div class="panel-full animate-in delay-3">
+    <div class="panel-title"><span class="panel-title-icon">⊞</span> MARKET COMPARISONS</div>
+    ${(a.comparisons || []).map(c => `
+      <div class="comparison-item">
+        <div>
+          <div class="comp-name">${c.name}</div>
+          <div class="comp-meta">${c.similarity} · ${c.f2p ? 'F2P' : 'P2P/P2E'} · ${c.profitable} profitability</div>
+          <div class="comp-lifespan">Lifespan: ${c.lifespan || '?'} · <em style="color:var(--text3)">${c.lesson}</em></div>
+        </div>
+        <div>
+          <div class="comp-score" style="color:${scoreColor(c.score)}">${c.score}</div>
+          <div class="comp-verdict ${compOutcomeClass(c.outcome)}">${c.outcome}</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- DEEP DIVE + TIMELINE -->
+  <div class="main-grid animate-in delay-4">
+    <div class="panel">
+      <div class="panel-title"><span class="panel-title-icon">≡</span> DEEP DIVE ANALYSIS</div>
+      ${Object.entries({
+        '🔭 Overview': a.deepDive?.overview,
+        '💰 Tokenomics': a.deepDive?.tokenomics,
+        '👥 Team': a.deepDive?.team,
+        '🎮 Gameplay': a.deepDive?.gameplay,
+        '📣 Community': a.deepDive?.community,
+        '🧪 Beta Assessment': a.deepDive?.betaAssessment,
+      }).filter(([k,v]) => v).map(([k,v]) => `
+        <div class="analysis-section">
+          <h4>${k}</h4>
+          <p>${v}</p>
+        </div>
+      `).join('')}
+    </div>
+    <div class="panel">
+      <div class="panel-title"><span class="panel-title-icon">◌</span> KEY TIMELINE</div>
+      ${(a.keyTimeline || []).map(t => `
+        <div class="timeline-item">
+          <div class="timeline-date">${t.date}</div>
+          <div class="timeline-content">${t.event}</div>
+        </div>
+      `).join('')}
+
+      <div style="margin-top:28px">
+        <div class="panel-title" style="border-top:1px solid var(--border);padding-top:20px;margin-top:8px"><span class="panel-title-icon">⬡</span> QUICK VERDICT</div>
+        <div style="font-family:'Literata',serif;font-size:14px;line-height:1.8;color:var(--text2)">
+          ${a.verdictSummary || ''}
+        </div>
+      </div>
+
+      <button class="copy-btn" onclick="copyReport()">⊕ COPY FULL REPORT</button>
+    </div>
+  </div>
+
+  <div class="footer-note animate-in delay-5">
+    W3SCOUT analysis generated by AI · Always do additional research · Past performance of similar projects is not financial advice<br>
+    Analysis for: <span style="color:var(--accent)">${a.projectName || 'Unknown'}</span> · Score: <strong>${a.overallScore}/100</strong>
+  </div>
+  `;
+}
+
+function animateScores() {
+  // Animate score bars
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar-fill[data-target]').forEach(el => {
+      el.style.width = el.dataset.target;
+    });
+    document.querySelectorAll('.risk-bar-inner[data-target]').forEach(el => {
+      el.style.width = el.dataset.target;
+    });
+    const ring = document.getElementById('scoreRing');
+    if (ring) {
+      ring.style.transition = 'stroke-dashoffset 1.2s ease';
+      ring.style.strokeDashoffset = ring.dataset.target;
+    }
+  }, 100);
+}
+
+function copyReport() {
+  const text = document.getElementById('resultsContent')?.innerText || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    if (btn) { btn.textContent = '✓ COPIED'; setTimeout(() => btn.textContent = '⊕ COPY FULL REPORT', 2000); }
+  });
+}
+
+// Enter key support
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+
+// Init
+renderHistory();
+</script>
+</body>
+</html>
+```
